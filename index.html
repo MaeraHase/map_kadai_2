@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>お天気マップ</title>
+    <style>body{padding:0;margin:0;background:#333;}h1{padding:0;margin:0;font-size:50%;color:white;}.mouse{font-size:50%;background: white;}</style>
+    <link rel="stylesheet" href="css/tenki.css">
+</head>
+<body>
+
+
+<!-- MAP[START] -->
+<h1></h1>
+<div id="myMap" style='width:100%;height:1000px;'></div>
+<div id="weather" class="weather">
+<div style="background: #cafefc; border: #cafefc solid 2px; font-size: 100%; padding: 20px;">テスト</div>
+    <div className='weather_time'><div className='weather__time_1'></div>クリック地点の天気</div>
+    </div>
+</div>
+<!-- MAP[END] -->
+
+
+<!-- [ MapTypeId ] https://msdn.microsoft.com/en-us/library/mt712700.aspx -->
+<!-- bingのmyKeyを挿入↓-->
+<script src='https://www.bing.com/api/maps/mapcontrol?callback=GetMap&key=Aik7Gy8FVe2LqL6H1rdje2RRib_nLNcHkTu2UDRSw4zpW2WVoH1uIyjHe1-0nR0D' async defer></script>
+<script>
+    //Initialization processing
+    
+        
+    
+</script>
+
+<!-- jQuery&GoogleMapsAPI -->
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<!-- /jQuery&GoogleMapsAPI -->
+
+<!-- javascript -->
+<script>
+// ピン↓
+function GetMap() {
+        let map = new Microsoft.Maps.Map('#myMap', {
+            center: new Microsoft.Maps.Location(35.681236, 139.767125), //Location center position（東京駅）
+        });
+
+        //Get MAP Infomation
+        let center = map.getCenter();
+
+        //Create custom Pushpin
+        let pin = new Microsoft.Maps.Pushpin(center, {
+            color: 'red',            //Color
+            draggable:true,          //MouseDraggable
+            enableClickedStyle:true, //Click
+            enableHoverStyle:true,   //MouseOver
+            visible:true             //show/hide
+        });
+
+        //Add the pushpin to the map
+        map.entities.push(pin);
+
+        // マップ上をクリックした場合に反応させる↓※JSのコードの書き方。今回はbingMap用のコードになるので不要。
+    // $("#myMap").on("click",function(info){
+    // })
+
+    // bingMap独自の決まったコード↓ 以下の並び方によって動くので順番はいじらない
+    Microsoft.Maps.Events.addHandler(map, 'click', function (e) {
+      map.entities.clear();
+        // クリックされた場所の座標を取得
+        var location = e.location;
+        
+        // 新しいピンを作成
+        var pin = new Microsoft.Maps.Pushpin(location);
+        console.log(e)
+        Microsoft.Maps.Events.addHandler(pin, 'click', function () {
+            // ピンをマップから削除
+            map.entities.remove(pin);
+        });
+        map.entities.push(pin);
+
+        // $.getJSONはデータを扱う系には大いに役立つシンプルなコードなので覚えておくと便利↓
+        $.getJSON(
+        `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m`,
+        function (data) {
+          console.log(data.current.temperature_2m); // ここに天気情報が入る
+          // alert(data.current.temperature_2m)
+          const weatherModal = document.getElementById("weather");
+
+// 既存の temperature クラスの要素を削除
+const existingTemperature = weatherModal.querySelector('.temperature');
+if (existingTemperature) {
+  weatherModal.removeChild(existingTemperature);
+}
+
+// 新しい temperature クラスの div 要素を作成
+const newDiv = document.createElement('div');
+newDiv.className = 'temperature';
+newDiv.textContent = data.current.temperature_2m;
+
+// 新しい div 要素を追加
+weatherModal.appendChild(newDiv);
+
+        }
+      );
+    });
+    
+};
+</script>
+
+
+</body>
+</html>
